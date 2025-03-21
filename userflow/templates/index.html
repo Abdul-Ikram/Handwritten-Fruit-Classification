@@ -1,0 +1,215 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fruit Classifier</title>
+  <link rel="icon" href="static/images/favicon.ico" type="image/x-icon">
+  <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}" media="screen">
+  <script class="u-script" type="text/javascript" src="{% static 'js/bootstrap.bundle.min.js' %}" defer=""></script>
+  <style>
+    body {
+      background-image: url('/static/images/Background-image.png');
+      background-repeat: repeat;
+      background-size: auto;
+      background-position: center;
+      margin: 0;
+    }
+
+    #preview {
+      display: none;
+    }
+
+    #preview-image {
+      width: 100%;
+      max-height: 300px;
+    }
+  </style>
+</head>
+
+<body>
+  <nav id="navbar" class="navbar navbar-expand-lg navbar-light bg-light fixed-top mb-5">
+    <div class="container-fluid">
+      <a class="navbar-brand" href="{% url 'classify' %}">Text Detection Model for Fruits</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+        aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item">
+            <a class="nav-link active" href="#home">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#how-it-works">How It Works</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#about-us">About Us</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#contact">Contact</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <br>
+
+  <section id="home" class="my-5 vh-100 align-items-center justify-content-center">
+    <div class="container text-center bg-light bg-opacity-75 p-5 rounded-5">
+      <h1 class="display-4">CNN Driven Intelligent Text Detection Model for Fruits</h1>
+      <p class="lead">Upload an image of a fruit's name in Urdu, and you'll receive the corresponding name with
+        description and image!</p>
+      <a href="#upload-section" class="btn btn-primary btn-lg mt-4">Get Started</a>
+    </div>
+  </section>
+
+  <section id="upload-section" class=" d-flex align-items-center justify-content-center my-5">
+    <div class="container bg-light bg-opacity-75 p-5 rounded-5">
+      <h2 class="text-center">Upload Fruit Name Image</h2>
+      <p class="text-center">Upload a clear image of the fruit name in Urdu text to get started.</p>
+
+      <form class="text-center" enctype="multipart/form-data" method="POST">
+        {% csrf_token %}
+        <div class="mb-3">
+          <label for="imageFile" class="form-label">Select an image file</label>
+          <input class="form-control bg-secondary bg-opacity-25" name="imageFile" type="file" id="imageFile"
+            accept="image/*" onchange="previewImage()">
+        </div>
+        <div id="preview" style="display:none;" class="my-5"> <!-- Hide preview container initially -->
+          <img id="preview-image" alt="Image Preview" style="max-width: auto; height: auto; width: auto;">
+        </div>
+        <button type="submit" class="btn btn-success" id="submitButton" style="display:none;" disabled>Submit</button>
+        <!-- Initially hidden and disabled -->
+      </form>
+
+      {% if error_message %}
+      <div class="alert alert-warning" role="alert">
+        {{ error_message }}
+      </div>
+      {% endif %}
+
+      {% if result %}
+      <div id="results-section" class="results">
+        <div class="result-container"> <!-- English result container -->
+          <p><strong>Fruit Name:</strong> {{ fruit_name }}</p>
+          <p><strong>Fruit Description:</strong> {{ english_description }}</p>
+        </div>
+        <div class="result-container"> <!-- Urdu result container -->
+          <p><strong>پھل کا نام:</strong> {{ in_urdu }}</p>
+          <p><strong>پھل کی وضاحت:</strong> {{ urdu_description }}</p>
+        </div>
+      </div>
+      {% endif %}
+
+      {% if image_url_1 and image_url_2 %}
+      <div id="images-section" class="image-results my-5">
+        <div class="row">
+          <div class="image-container col-lg-6 col-md-6 col-sm-12 d-flex justify-content-center w-50 rounded-5">
+            <img src="{% static image_url_1 %}" alt="Predicted Fruit Image" class="result-image rounded-3"
+              height="350px">
+          </div>
+          <div class="image-container col-lg-6 col-md-6 col-sm-12 d-flex justify-content-center w-50 rounded-5">
+            <img src="{% static image_url_2 %}" alt="Predicted Fruit Image" class="result-image rounded-3"
+              height="350px">
+          </div>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+    <script>
+      function previewImage() {
+        const input = document.getElementById('imageFile');
+        const preview = document.getElementById('preview');
+        const previewImage = document.getElementById('preview-image');
+        const submitButton = document.getElementById('submitButton');
+
+        // Check if a file is selected
+        if (input.files && input.files[0]) {
+          const reader = new FileReader();
+          reader.onload = function (e) {
+            previewImage.src = e.target.result;
+            preview.style.display = 'block'; // Show image preview
+          };
+          reader.readAsDataURL(input.files[0]);
+
+          // Show and enable the submit button
+          submitButton.style.display = 'inline-block'; // Make the button visible
+          submitButton.disabled = false; // Enable the button
+        }
+      }
+    </script>
+
+    <script>
+      window.onload = function () {
+        // Check if the result or images are displayed
+        if (document.getElementById('results-section') || document.getElementById('images-section')) {
+          // Scroll to the results section smoothly
+          document.getElementById('results-section')?.scrollIntoView({
+            behavior: 'smooth'
+          });
+        }
+      };
+    </script>
+  </section>
+
+  <section id="how-it-works" class="vh-100 d-flex align-items-center justify-content-center">
+    <div class="container bg-light bg-opacity-75 p-5 rounded-5">
+      <h2 class="text-center">How It Works</h2>
+      <div class="row text-center mt-4">
+        <div class="col-md-3">
+          <h4>1. Upload</h4>
+          <p>Upload an image containing the fruit name in Urdu.</p>
+        </div>
+        <div class="col-md-3">
+          <h4>2. Text Detection</h4>
+          <p>Our CNN-driven model processes the image to detect Urdu text.</p>
+        </div>
+        <div class="col-md-3">
+          <h4>3. Retrieval</h4>
+          <p>The database provides the fruit name in English and Urdu, along with descriptions and images.</p>
+        </div>
+        <div class="col-md-3">
+          <h4>4. Response</h4>
+          <p>Data retrieved from the database on the server will be displayed on the webpage.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="about-us" class="vh-100 d-flex align-items-center justify-content-center">
+    <div class="container text-center bg-light bg-opacity-75 p-5 rounded-5">
+      <h2>About Us</h2>
+      <p>Our CNN-driven model classifies fruit names from images of Urdu text and provides the English equivalent. This
+        platform enhances multilingual accessibility and offers detailed descriptions in both languages, along with
+        images of the fruit.
+      </p>
+    </div>
+  </section>
+
+  <section id="contact" class="vh-100 d-flex align-items-center justify-content-center">
+    <div class="container text-center bg-light bg-opacity-75 p-5 rounded-5">
+      <h2>Contact Us</h2>
+      <p class="mx-5">If you have any questions, suggestions, or feedback regarding our final year project "CNN Driven
+        Intelligent
+        Text Detection Model for Fruits," Please let us know.</p>
+      <p><span class="fw-medium">Abdul Ikram:</span> <a href="mailto:abdulikram202@gmail.com"
+          class="text-decoration-none">abdulikram202@gmail.com</a></p>
+    </div>
+  </section>
+
+  <script>
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        document.querySelector(this.getAttribute('href')).scrollIntoView({
+          behavior: 'smooth'
+        });
+      });
+    });
+  </script>
+</body>
+
+</html>
